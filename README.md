@@ -47,8 +47,9 @@ wiggle_mapper/
 
 ### 1. Running the Web App
 Because the app is built as a pure client-side page, there is no compile or install phase:
-*   **Option A (Direct Run):** Double-click `index.html` to open it in any web browser.
-*   **Option B (Simple Web Server):** To serve it locally over a network, open a terminal in the folder and run:
+*   **Option A (Live Link):** Access the live hosted page directly at **[https://leifdavisson.github.io/wiggle_mapper/](https://leifdavisson.github.io/wiggle_mapper/)**.
+*   **Option B (Direct Run):** Double-click `index.html` to open it in any web browser.
+*   **Option C (Simple Web Server):** To serve it locally over a network, open a terminal in the folder and run:
     ```bash
     python3 -m http.server 8000
     ```
