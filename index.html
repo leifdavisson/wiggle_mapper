@@ -543,22 +543,39 @@
 
         // Parse WiGLE CSV format (handles metadata skipping dynamically)
         function parseWiggleCSV(csvContent, filename, callback) {
-            const lines = csvContent.split('\n');
-            let dataStartIndex = 0;
-            let headerLine = '';
-
-            // Find where data section starts (looks for line starting with MAC or SSID)
-            for (let i = 0; i < lines.length; i++) {
-                const line = lines[i].trim();
-                if (line.toLowerCase().startsWith('mac') || line.toLowerCase().includes('ssid') && line.toLowerCase().includes('rssi')) {
-                    headerLine = line;
-                    dataStartIndex = i;
-                    break;
-                }
+            // Find where data section starts (looks for headers containing MAC or SSID)
+            let headerIndex = csvContent.toLowerCase().indexOf('mac,ssid');
+            if (headerIndex === -1) {
+                headerIndex = csvContent.toLowerCase().indexOf('mac, ssid');
+            }
+            if (headerIndex === -1) {
+                headerIndex = csvContent.toLowerCase().indexOf('bssid,ssid');
+            }
+            if (headerIndex === -1) {
+                headerIndex = csvContent.toLowerCase().indexOf('ssid,rssi');
             }
 
-            // Reconstruct the clean CSV string (headers + data lines)
-            const cleanCSV = lines.slice(dataStartIndex).join('\n');
+            let cleanCSV = csvContent;
+            if (headerIndex !== -1) {
+                cleanCSV = csvContent.substring(headerIndex);
+            } else {
+                // Fallback: search within first 20000 characters to avoid splitting a giant file
+                const sample = csvContent.substring(0, 20000);
+                const sampleLines = sample.split('\n');
+                let foundOffset = -1;
+                let charCount = 0;
+                for (let i = 0; i < sampleLines.length; i++) {
+                    const line = sampleLines[i].trim();
+                    if (line.toLowerCase().startsWith('mac') || line.toLowerCase().includes('ssid') && line.toLowerCase().includes('rssi')) {
+                        foundOffset = charCount;
+                        break;
+                    }
+                    charCount += sampleLines[i].length + 1; // +1 for newline
+                }
+                if (foundOffset !== -1) {
+                    cleanCSV = csvContent.substring(foundOffset);
+                }
+            }
             
             Papa.parse(cleanCSV, {
                 header: true,
@@ -654,6 +671,12 @@
             exportBtn.removeAttribute('disabled');
             dashboardSection.classList.remove('hidden');
 
+            // If the dataset is large, disable the Raw Points layer by default to prevent UI lag
+            if (allDataPoints.length > 10000) {
+                layerPointsChk.checked = false;
+                toggleLayer(pointsLayerGroup, false);
+            }
+
             // Auto-pan/zoom map to bound coordinates of loaded data
             fitMapToData();
 
@@ -712,27 +735,34 @@
             // 1. Render Raw Points
             pointsLayerGroup.clearLayers();
             if (layerPointsChk.checked) {
-                filteredPoints.forEach(p => {
-                    const marker = L.circleMarker([p.lat, p.lng], {
-                        radius: 4,
-                        fillColor: getRSSIColor(p.rssi),
-                        color: '#1e293b',
-                        weight: 1,
-                        fillOpacity: 0.8
-                    });
+                const maxRawPoints = 15000;
+                if (filteredPoints.length > maxRawPoints) {
+                    layerPointsChk.checked = false;
+                    toggleLayer(pointsLayerGroup, false);
+                    alert(`This filter contains ${filteredPoints.length} points, which exceeds the safe rendering limit (${maxRawPoints} points). Raw Points layer has been automatically disabled to prevent browser freezing. We recommend using the Grid Overlay or Heatmap instead!`);
+                } else {
+                    filteredPoints.forEach(p => {
+                        const marker = L.circleMarker([p.lat, p.lng], {
+                            radius: 4,
+                            fillColor: getRSSIColor(p.rssi),
+                            color: '#1e293b',
+                            weight: 1,
+                            fillOpacity: 0.8
+                        });
 
-                    marker.bindPopup(`
-                        <div class="text-xs text-slate-800 font-sans">
-                            <p class="font-bold text-slate-900 border-b pb-1 mb-1">${p.ssid || '<i>Hidden SSID</i>'}</p>
-                            <p><b>Signal:</b> ${p.rssi} dBm</p>
-                            <p><b>MAC (BSSID):</b> <code>${p.mac}</code></p>
-                            <p><b>Channel:</b> ${p.channel} (${p.frequency ? p.frequency + ' MHz' : 'N/A'})</p>
-                            <p><b>GPS Accuracy:</b> &plusmn;${p.accuracy.toFixed(1)}m</p>
-                            <p class="text-[9px] text-slate-400 mt-1">Source file: ${p.file}</p>
-                        </div>
-                    `);
-                    pointsLayerGroup.addLayer(marker);
-                });
+                        marker.bindPopup(`
+                            <div class="text-xs text-slate-800 font-sans">
+                                <p class="font-bold text-slate-900 border-b pb-1 mb-1">${p.ssid || '<i>Hidden SSID</i>'}</p>
+                                <p><b>Signal:</b> ${p.rssi} dBm</p>
+                                <p><b>MAC (BSSID):</b> <code>${p.mac}</code></p>
+                                <p><b>Channel:</b> ${p.channel} (${p.frequency ? p.frequency + ' MHz' : 'N/A'})</p>
+                                <p><b>GPS Accuracy:</b> &plusmn;${p.accuracy.toFixed(1)}m</p>
+                                <p class="text-[9px] text-slate-400 mt-1">Source file: ${p.file}</p>
+                            </div>
+                        `);
+                        pointsLayerGroup.addLayer(marker);
+                    });
+                }
             }
 
             // 2. Heatmap Layer update
@@ -841,6 +871,16 @@
                 const latMaxIdx = Math.ceil((bMaxLat - minLat) / latStep);
                 const lngMinIdx = Math.floor((bMinLng - minLng) / lngStep);
                 const lngMaxIdx = Math.ceil((bMaxLng - minLng) / lngStep);
+
+                const totalGridCells = (latMaxIdx - latMinIdx) * (lngMaxIdx - lngMinIdx);
+                // Safeguard against rendering millions of grid cells inside a massive polygon
+                if (totalGridCells > 40000) {
+                    alert("The drawn campus area is too large for the current grid resolution. Automatically increasing the grid cell size to prevent browser slowdown.");
+                    const adjustedGridMeters = Math.ceil(Math.sqrt((bMaxLat - bMinLat) * 111320 * (bMaxLng - bMinLng) * 111320 * Math.cos(avgLat * Math.PI / 180) / 40000));
+                    gridSlider.value = Math.max(gridMeters, adjustedGridMeters);
+                    gridVal.textContent = `${gridSlider.value}m`;
+                    return calculateGridOverlay(points); // Recalculate recursively with new slider value
+                }
 
                 for (let l = latMinIdx - 1; l <= latMaxIdx + 1; l++) {
                     for (let g = lngMinIdx - 1; g <= lngMaxIdx + 1; g++) {
