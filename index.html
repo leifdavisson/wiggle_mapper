@@ -189,7 +189,7 @@
                     
                     <div class="grid grid-cols-2 gap-2">
                         <button id="draw-btn" class="py-2 px-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
-                            <i data-lucide="paint-brush" class="w-3.5 h-3.5"></i> <span id="draw-btn-text">Draw Boundary</span>
+                            <i data-lucide="brush" class="w-3.5 h-3.5"></i> <span id="draw-btn-text">Draw Boundary</span>
                         </button>
                         <button id="hull-btn" class="py-2 px-3 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
                             <i data-lucide="expand" class="w-3.5 h-3.5"></i> Auto-Boundary
@@ -404,12 +404,36 @@
             setupEventListeners();
             initChart();
 
-            // Auto-load demo if ?demo=true is in URL
             const urlParams = new URLSearchParams(window.location.search);
+
+            // Auto-load demo if ?demo=true is in URL
             if (urlParams.get('demo') === 'true') {
                 setTimeout(() => {
                     loadDemoCampus();
                 }, 100);
+            }
+
+            // Test Hook: Load a local file via fetch if ?test_file=... is specified
+            const testFile = urlParams.get('test_file');
+            if (testFile) {
+                setTimeout(() => {
+                    console.log("TEST_LOG: Fetching test file: " + testFile);
+                    fetch(testFile)
+                        .then(r => {
+                            if (!r.ok) throw new Error("HTTP error " + r.status);
+                            return r.text();
+                        })
+                        .then(text => {
+                            parseWiggleCSV(text, testFile, (points) => {
+                                allDataPoints = points;
+                                onDataImportSuccess();
+                                console.log("TEST_SUCCESS: Loaded " + points.length + " points");
+                            });
+                        })
+                        .catch(err => {
+                            console.error("TEST_ERROR: Fetch failed for " + testFile, err);
+                        });
+                }, 150);
             }
         });
 
@@ -907,13 +931,7 @@
             let sparseCellsCount = 0;
             let insideCampusTotalCells = 0;
 
-            // Generate boundary polygon coordinates array for PIP checking
-            let polyVertices = null;
-            if (boundaryPolygon) {
-                polyVertices = boundaryPoints.map(latlng => [latlng.lat, latlng.lng]);
-            } else {
-                // If no boundary drawn, we define boundary as the convex hull of our active grid cells (or basic bounding box)
-            }
+
 
             // If we have a boundary drawn, we want to iterate over ALL potential cells within the boundary's bounding box
             if (polyVertices) {
@@ -1326,7 +1344,7 @@
                         },
                         y: {
                             grid: { color: '#334155' },
-                            ticks: { color: '#94a3b8', font: { size: 9 }, stepSize: 1 },
+                            ticks: { color: '#94a3b8', font: { size: 9 } },
                             title: { display: true, text: 'AP Count', color: '#94a3b8', font: { size: 10 } }
                         }
                     }
