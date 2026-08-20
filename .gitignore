@@ -1,0 +1,11 @@
+# Ignore local scan data files for privacy and repository size
+data/
+*.csv
+*.csv.gz
+
+# Ignore local configuration saves
+*.json
+
+# OS files
+.DS_Store
+Thumbs.db
