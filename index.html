@@ -81,10 +81,13 @@
                     <!-- Drag and Drop Target -->
                     <div id="drop-zone" class="border-2 border-dashed border-slate-600 hover:border-indigo-500 rounded-lg p-6 text-center cursor-pointer transition bg-slate-900/50">
                         <i data-lucide="upload-cloud" class="w-10 h-10 mx-auto text-slate-400 mb-2"></i>
-                        <p class="text-xs text-slate-300">Drag & drop WiGLE CSV files here</p>
+                        <p class="text-xs text-slate-300">Drag & drop WiGLE CSV or CSV.GZ files here</p>
                         <p class="text-[10px] text-slate-500 mt-1">or click to browse from device</p>
-                        <input type="file" id="file-input" multiple accept=".csv" class="hidden" />
+                        <input type="file" id="file-input" multiple accept=".csv,.gz" class="hidden" />
                     </div>
+                    <p class="text-[10px] text-slate-400 bg-slate-900/30 p-2 rounded border border-slate-700/50">
+                        💡 <b>Tip:</b> Students can email their exported <code>.csv.gz</code> files directly to the teacher, or share them via Google Drive or OneDrive. No unzipping needed!
+                    </p>
 
                     <div class="flex gap-2">
                         <button id="load-demo-btn" class="flex-1 py-2 px-3 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition">
@@ -486,8 +489,8 @@
             }
         }
 
-        // Process uploaded CSV files
-        function processFiles(files) {
+        // Process uploaded CSV or CSV.GZ files
+        async function processFiles(files) {
             let filesLoadedCount = 0;
             const parsedResults = [];
 
@@ -495,10 +498,18 @@
                 const file = files[i];
                 loadedFiles.push(file.name);
                 
-                // Read file content
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const text = event.target.result;
+                try {
+                    let text;
+                    if (file.name.endsWith('.gz')) {
+                        // Decompress gzip stream natively in the browser
+                        const ds = new DecompressionStream('gzip');
+                        const decompressedStream = file.stream().pipeThrough(ds);
+                        const response = new Response(decompressedStream);
+                        text = await response.text();
+                    } else {
+                        text = await file.text();
+                    }
+
                     parseWiggleCSV(text, file.name, (points) => {
                         parsedResults.push(...points);
                         filesLoadedCount++;
@@ -508,8 +519,17 @@
                             onDataImportSuccess();
                         }
                     });
-                };
-                reader.readAsText(file);
+                } catch (err) {
+                    console.error("Error loading/decompressing file: " + file.name, err);
+                    alert("Could not read " + file.name + ". Ensure it is a valid WiGLE CSV or CSV.GZ export file.");
+                    filesLoadedCount++;
+                    if (filesLoadedCount === files.length) {
+                        if (parsedResults.length > 0) {
+                            allDataPoints.push(...parsedResults);
+                            onDataImportSuccess();
+                        }
+                    }
+                }
             }
         }
 

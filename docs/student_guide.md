@@ -49,16 +49,18 @@ Once your scan is finished, you need to export the log file.
 
 1.  **Stop Scanning:** Toggle the scanning switch to OFF in the WiGLE app.
 2.  **Export CSV:**
-    *   **Android:** Go to the app menu (three dots or slide-out menu) -> Tap **"Database"** -> Tap **"Export CSV"** or **"Export to SD Card."**
-    *   **iOS:** Go to **"Uploads"** -> Tap the share icon next to your recent run -> Choose **"Export CSV."**
-3.  **Send the File:** 
-    *   Transfer the exported `.csv` file to your computer or your teacher's computer. 
-    *   You can do this via **Google Drive**, **Email**, **Slack/Teams**, or **AirDrop**.
-    *   *Tip:* WiGLE CSV filenames usually look like: `WigleWifi_2026xxxxxxxx.csv`.
+    *   **Android:** Go to the app menu (three dots or slide-out menu) -> Tap **"Database"** -> Tap **"Export CSV"** (this will save a compressed **`.csv.gz`** file to your downloads).
+    *   **iOS:** Go to **"Uploads"** -> Tap the share icon next to your recent run -> Choose **"Export CSV"** (this will create a **`.csv`** or **`.csv.gz`** file).
+3.  **Send the File to Your Teacher:**
+    *   Since you'll analyze all scans together, you must send your file to your teacher or group leader.
+    *   **Email:** Attach the exported `.csv.gz` file directly to an email to your teacher.
+    *   **Cloud Storage:** Upload it to your school's **Google Drive** or **Microsoft OneDrive** folder shared by your teacher.
+    *   *Tip:* Do not worry about unzipping or decompressing the `.csv.gz` file! Wiggle Mapper can read the zipped files directly.
+    *   *Tip:* WiGLE exported files usually look like: `WigleWifi_2026xxxxxxxx.csv.gz` or similar.
 
 ---
 
 ## 🗺️ Step 5: Uploading to the School Mapper
 1. Open the **Wiggle Mapper** webpage on your computer.
-2. Drag and drop your `.csv` file directly onto the map screen (you can upload multiple files at once!).
-3. Select your school's Wi-Fi network from the list to see your coverage map!
+2. Drag and drop your **`.csv`** or **`.csv.gz`** files directly onto the map screen (you can select and drop multiple files from your class at the same time!).
+3. Select your school's Wi-Fi network from the list to see the combined coverage map!
