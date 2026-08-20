@@ -770,6 +770,13 @@
                             fillOpacity: 0.8
                         });
 
+                        marker.on('click', (e) => {
+                            if (isDrawingBoundary) {
+                                handleMapClickForBoundary(e);
+                                L.DomEvent.stopPropagation(e);
+                            }
+                        });
+
                         marker.bindPopup(`
                             <div class="text-xs text-slate-800 font-sans">
                                 <p class="font-bold text-slate-900 border-b pb-1 mb-1">${p.ssid || '<i>Hidden SSID</i>'}</p>
@@ -957,6 +964,12 @@
                                         fillColor: getRSSIColor(avgRssi),
                                         fillOpacity: 0.6
                                     });
+                                    rect.on('click', (e) => {
+                                        if (isDrawingBoundary) {
+                                            handleMapClickForBoundary(e);
+                                            L.DomEvent.stopPropagation(e);
+                                        }
+                                    });
                                     rect.bindTooltip(`Avg Signal: ${avgRssi.toFixed(1)} dBm (${cell.count} scans)`);
                                     gridLayerGroup.addLayer(rect);
                                 }
@@ -977,6 +990,12 @@
                                             fillOpacity: 0.35,
                                             dashArray: '3, 3'
                                         });
+                                        gapRect.on('click', (e) => {
+                                            if (isDrawingBoundary) {
+                                                handleMapClickForBoundary(e);
+                                                L.DomEvent.stopPropagation(e);
+                                            }
+                                        });
                                         gapRect.bindTooltip(`Low Confidence: Only ${cell.count} scan(s). Needs ${confThreshold} scans.`);
                                         gapsLayerGroup.addLayer(gapRect);
                                     }
@@ -993,6 +1012,12 @@
                                         fillColor: '#ec4899',
                                         fillOpacity: 0.45,
                                         dashArray: '3, 3'
+                                    });
+                                    gapRect.on('click', (e) => {
+                                        if (isDrawingBoundary) {
+                                            handleMapClickForBoundary(e);
+                                            L.DomEvent.stopPropagation(e);
+                                        }
                                     });
                                     gapRect.bindTooltip(`Unscanned Zone: 0 scans inside boundary.`);
                                     gapsLayerGroup.addLayer(gapRect);
@@ -1026,6 +1051,12 @@
                             fillColor: getRSSIColor(avgRssi),
                             fillOpacity: 0.6
                         });
+                        rect.on('click', (e) => {
+                            if (isDrawingBoundary) {
+                                handleMapClickForBoundary(e);
+                                L.DomEvent.stopPropagation(e);
+                            }
+                        });
                         rect.bindTooltip(`Avg Signal: ${avgRssi.toFixed(1)} dBm (${cell.count} scans)`);
                         gridLayerGroup.addLayer(rect);
                     }
@@ -1043,6 +1074,12 @@
                                 fillColor: '#ec4899',
                                 fillOpacity: 0.35,
                                 dashArray: '3, 3'
+                            });
+                            gapRect.on('click', (e) => {
+                                if (isDrawingBoundary) {
+                                    handleMapClickForBoundary(e);
+                                    L.DomEvent.stopPropagation(e);
+                                }
                             });
                             gapRect.bindTooltip(`Low Confidence: Only ${cell.count} scans.`);
                             gapsLayerGroup.addLayer(gapRect);
