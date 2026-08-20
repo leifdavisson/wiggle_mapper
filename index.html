@@ -598,8 +598,8 @@
                         // Filter to valid Wi-Fi points with proper coordinates
                         if (type.toUpperCase() === 'WIFI' && !isNaN(lat) && !isNaN(lng) && mac) {
                             points.push({
-                                ssid: ssid.trim(),
-                                mac: mac.trim(),
+                                ssid: String(ssid).trim(),
+                                mac: String(mac).trim(),
                                 lat: lat,
                                 lng: lng,
                                 rssi: rssi,
