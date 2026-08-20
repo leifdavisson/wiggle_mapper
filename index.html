@@ -333,6 +333,7 @@
         let allDataPoints = [];
         let uniqueSsids = new Set();
         let loadedFiles = [];
+        let isGridResolutionAdjusted = false;
         let map = null;
         let pointsLayerGroup = null;
         let gridLayerGroup = null;
@@ -677,6 +678,25 @@
                 toggleLayer(pointsLayerGroup, false);
             }
 
+            // Clear existing campus boundary if it doesn't overlap with the new data points at all
+            if (boundaryPolygon && allDataPoints.length > 0) {
+                const lats = allDataPoints.map(p => p.lat);
+                const lngs = allDataPoints.map(p => p.lng);
+                const minLat = Math.min(...lats);
+                const maxLat = Math.max(...lats);
+                const minLng = Math.min(...lngs);
+                const maxLng = Math.max(...lngs);
+
+                // If all boundary vertices are far from the new data coordinates, clear it
+                const isOutside = boundaryPoints.every(pt => 
+                    pt.lat < minLat - 0.05 || pt.lat > maxLat + 0.05 ||
+                    pt.lng < minLng - 0.05 || pt.lng > maxLng + 0.05
+                );
+                if (isOutside) {
+                    clearBoundary();
+                }
+            }
+
             // Auto-pan/zoom map to bound coordinates of loaded data
             fitMapToData();
 
@@ -805,8 +825,10 @@
             
             if (points.length === 0) return;
 
+            isGridResolutionAdjusted = false;
+
             // Resolve grid spacing in meters from UI slider
-            const gridMeters = parseInt(gridSlider.value);
+            let gridMeters = parseInt(gridSlider.value);
             const confThreshold = parseInt(confSlider.value);
 
             // Bounding box of data points
@@ -821,6 +843,34 @@
             // 1 degree Latitude = 111,320 meters
             // 1 degree Longitude = 111,320 * cos(avgLat) meters
             const avgLat = (minLat + maxLat) / 2;
+
+            // Generate boundary polygon coordinates array for PIP checking
+            let polyVertices = null;
+            if (boundaryPolygon) {
+                polyVertices = boundaryPoints.map(latlng => [latlng.lat, latlng.lng]);
+                
+                const boundaryLats = polyVertices.map(v => v[0]);
+                const boundaryLngs = polyVertices.map(v => v[1]);
+                const bMinLat = Math.min(...boundaryLats);
+                const bMaxLat = Math.max(...boundaryLats);
+                const bMinLng = Math.min(...boundaryLngs);
+                const bMaxLng = Math.max(...boundaryLngs);
+
+                const initialLatStep = gridMeters / 111320;
+                const initialLngStep = gridMeters / (111320 * Math.cos(avgLat * Math.PI / 180));
+                
+                const latRangeIdx = Math.ceil((bMaxLat - bMinLat) / initialLatStep);
+                const lngRangeIdx = Math.ceil((bMaxLng - bMinLng) / initialLngStep);
+                const totalGridCells = latRangeIdx * lngRangeIdx;
+
+                // Safeguard: If the boundary box is huge relative to grid resolution, locally scale down resolution
+                if (totalGridCells > 40000) {
+                    isGridResolutionAdjusted = true;
+                    const adjustedGridMeters = Math.ceil(Math.sqrt((bMaxLat - bMinLat) * 111320 * (bMaxLng - bMinLng) * 111320 * Math.cos(avgLat * Math.PI / 180) / 40000));
+                    gridMeters = Math.max(gridMeters, adjustedGridMeters);
+                }
+            }
+
             const latStep = gridMeters / 111320;
             const lngStep = gridMeters / (111320 * Math.cos(avgLat * Math.PI / 180));
 
@@ -871,16 +921,6 @@
                 const latMaxIdx = Math.ceil((bMaxLat - minLat) / latStep);
                 const lngMinIdx = Math.floor((bMinLng - minLng) / lngStep);
                 const lngMaxIdx = Math.ceil((bMaxLng - minLng) / lngStep);
-
-                const totalGridCells = (latMaxIdx - latMinIdx) * (lngMaxIdx - lngMinIdx);
-                // Safeguard against rendering millions of grid cells inside a massive polygon
-                if (totalGridCells > 40000) {
-                    alert("The drawn campus area is too large for the current grid resolution. Automatically increasing the grid cell size to prevent browser slowdown.");
-                    const adjustedGridMeters = Math.ceil(Math.sqrt((bMaxLat - bMinLat) * 111320 * (bMaxLng - bMinLng) * 111320 * Math.cos(avgLat * Math.PI / 180) / 40000));
-                    gridSlider.value = Math.max(gridMeters, adjustedGridMeters);
-                    gridVal.textContent = `${gridSlider.value}m`;
-                    return calculateGridOverlay(points); // Recalculate recursively with new slider value
-                }
 
                 for (let l = latMinIdx - 1; l <= latMaxIdx + 1; l++) {
                     for (let g = lngMinIdx - 1; g <= lngMaxIdx + 1; g++) {
@@ -1312,6 +1352,14 @@
                 alerts.push({
                     type: 'info',
                     text: `Low Survey Confidence: ${gapsPct}% of campus is unscanned or lacks sufficient points. Send students to walk the pink zones.`
+                });
+            }
+
+            // Check if grid resolution was auto-adjusted (large boundary)
+            if (isGridResolutionAdjusted) {
+                alerts.push({
+                    type: 'warning',
+                    text: `Resolution Adjusted: The boundary spans a very large area. Grid cell size has been scaled up locally to protect rendering speed.`
                 });
             }
 
