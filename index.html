@@ -402,6 +402,14 @@
             initMap();
             setupEventListeners();
             initChart();
+
+            // Auto-load demo if ?demo=true is in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('demo') === 'true') {
+                setTimeout(() => {
+                    loadDemoCampus();
+                }, 100);
+            }
         });
 
         // Event Listeners Setup
