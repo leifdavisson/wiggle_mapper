@@ -317,7 +317,7 @@
             </div>
 
             <!-- Floating drawing status banner -->
-            <div id="drawing-banner" class="absolute top-5 left-5 bg-indigo-600 border border-indigo-400 text-white px-4 py-2 rounded-lg shadow-2xl z-[1000] text-xs font-semibold flex items-center gap-2 animate-pulse hidden">
+            <div id="drawing-banner" class="absolute top-5 left-1/2 -translate-x-1/2 bg-indigo-600 border border-indigo-400 text-white px-4 py-2 rounded-lg shadow-2xl z-[1000] text-xs font-semibold flex items-center gap-2 animate-pulse hidden">
                 <i data-lucide="mouse-pointer-click" class="w-4 h-4"></i>
                 <span>Click on the map to place boundary points. Double-click or click "Stop" to finish.</span>
             </div>
@@ -425,6 +425,7 @@
                         })
                         .then(text => {
                             parseWiggleCSV(text, testFile, (points) => {
+                                loadedFiles = [testFile.split('/').pop()];
                                 allDataPoints = points;
                                 onDataImportSuccess();
                                 console.log("TEST_SUCCESS: Loaded " + points.length + " points");
@@ -455,7 +456,7 @@
                 e.preventDefault();
                 dropZone.classList.remove('border-indigo-500', 'bg-slate-900/70');
                 if (e.dataTransfer.files.length > 0) {
-                    processFiles(e.dataTransfer.files);
+                    processFiles(Array.from(e.dataTransfer.files));
                 }
             });
 
@@ -518,7 +519,9 @@
         // File Selection logic
         function handleFileSelect(e) {
             if (e.target.files.length > 0) {
-                processFiles(e.target.files);
+                const filesArray = Array.from(e.target.files);
+                processFiles(filesArray);
+                fileInput.value = '';
             }
         }
 
@@ -529,7 +532,6 @@
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                loadedFiles.push(file.name);
                 
                 try {
                     let text;
@@ -544,12 +546,21 @@
                     }
 
                     parseWiggleCSV(text, file.name, (points) => {
-                        parsedResults.push(...points);
+                        if (points.length === 0) {
+                            alert(`Warning: No valid Wi-Fi points were found in ${file.name}.\n\nNote: If this was collected on iOS, WiGLE cannot scan Wi-Fi signals due to Apple security/privacy restrictions.`);
+                        } else {
+                            loadedFiles.push(file.name);
+                            parsedResults.push(...points);
+                        }
                         filesLoadedCount++;
 
                         if (filesLoadedCount === files.length) {
-                            allDataPoints.push(...parsedResults);
-                            onDataImportSuccess();
+                            if (parsedResults.length > 0) {
+                                allDataPoints.push(...parsedResults);
+                                onDataImportSuccess();
+                            } else if (allDataPoints.length === 0) {
+                                resetApp();
+                            }
                         }
                     });
                 } catch (err) {
@@ -560,6 +571,8 @@
                         if (parsedResults.length > 0) {
                             allDataPoints.push(...parsedResults);
                             onDataImportSuccess();
+                        } else if (allDataPoints.length === 0) {
+                            resetApp();
                         }
                     }
                 }
@@ -654,7 +667,8 @@
             // Extract unique SSIDs
             uniqueSsids.clear();
             allDataPoints.forEach(p => {
-                if (p.ssid) uniqueSsids.add(p.ssid);
+                // Keep empty/hidden SSIDs as well (allow filtering), normalize to string
+                uniqueSsids.add(p.ssid !== undefined && p.ssid !== null ? String(p.ssid).trim() : '');
             });
 
             // Populate SSID dropdown
@@ -854,7 +868,11 @@
             gridLayerGroup.clearLayers();
             gapsLayerGroup.clearLayers();
             
-            if (points.length === 0) return;
+            if (points.length === 0) {
+                deadZoneStat.textContent = '0%';
+                gapStat.textContent = '0%';
+                return;
+            }
 
             isGridResolutionAdjusted = false;
 
@@ -1148,7 +1166,17 @@
                 drawingBanner.classList.remove('hidden');
                 
                 // Clear any existing boundary
-                clearBoundary();
+                if (boundaryPolygon) {
+                    map.removeLayer(boundaryPolygon);
+                    boundaryPolygon = null;
+                }
+                boundaryPoints = [];
+                boundaryDrawPointsGroup.clearLayers();
+                
+                // Set map cursor to crosshair
+                if (map) {
+                    map.getContainer().style.cursor = 'crosshair';
+                }
             } else {
                 // Stop drawing
                 finishDrawingBoundary();
@@ -1180,7 +1208,8 @@
                 weight: 2,
                 fillColor: '#6366f1',
                 fillOpacity: 0.1,
-                className: 'campus-boundary-style'
+                className: 'campus-boundary-style',
+                interactive: false
             }).addTo(map);
         }
 
@@ -1191,6 +1220,11 @@
             drawBtn.classList.remove('bg-rose-600', 'hover:bg-rose-500');
             drawingBanner.classList.add('hidden');
             boundaryDrawPointsGroup.clearLayers();
+            
+            // Reset map cursor
+            if (map) {
+                map.getContainer().style.cursor = '';
+            }
 
             if (boundaryPoints.length < 3) {
                 alert("Please click at least 3 points on the map to define a closed campus area.");
@@ -1215,12 +1249,18 @@
             clearBoundary();
             
             boundaryPoints = hullPoints.map(p => L.latLng(p.lat, p.lng));
+            if (boundaryPoints.length < 3) {
+                alert("Could not generate a valid boundary. The active points might be collinear or duplicate.");
+                clearBoundary();
+                return;
+            }
             boundaryPolygon = L.polygon(boundaryPoints, {
                 color: '#6366f1',
                 weight: 2,
                 fillColor: '#6366f1',
                 fillOpacity: 0.1,
-                className: 'campus-boundary-style'
+                className: 'campus-boundary-style',
+                interactive: false
             }).addTo(map);
 
             updateVisualization();
@@ -1238,6 +1278,11 @@
             drawBtnText.textContent = "Draw Boundary";
             drawBtn.classList.add('bg-indigo-600', 'hover:bg-indigo-500');
             drawBtn.classList.remove('bg-rose-600', 'hover:bg-rose-500');
+            
+            // Reset map cursor
+            if (map) {
+                map.getContainer().style.cursor = '';
+            }
 
             updateVisualization();
         }
@@ -1515,7 +1560,8 @@
                             weight: 2,
                             fillColor: '#6366f1',
                             fillOpacity: 0.1,
-                            className: 'campus-boundary-style'
+                            className: 'campus-boundary-style',
+                            interactive: false
                         }).addTo(map);
                     }
 
@@ -1529,6 +1575,8 @@
                 } catch (err) {
                     alert("Failed to load map configuration. Make sure file is a valid .json project exported from Wiggle Mapper.");
                     console.error(err);
+                } finally {
+                    importInput.value = '';
                 }
             };
             reader.readAsText(file);
@@ -1586,7 +1634,8 @@
                 weight: 2,
                 fillColor: '#6366f1',
                 fillOpacity: 0.1,
-                className: 'campus-boundary-style'
+                className: 'campus-boundary-style',
+                interactive: false
             }).addTo(map);
 
             // Generate simulated access points location centroids
