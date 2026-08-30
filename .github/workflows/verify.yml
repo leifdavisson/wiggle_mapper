@@ -1,0 +1,47 @@
+name: High-Assurance V&V Quality Gates
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    name: Formal Verification & Validation Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install Verification Tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-cov hypothesis mypy
+
+      - name: 1. Static Type Checking Gate (mypy --strict)
+        run: |
+          mypy --strict src/
+
+      - name: 2. Deterministic 100% Branch Coverage Gate
+        run: |
+          PYTHONPATH=src:. pytest --cov=src --cov-branch --cov-report=term-missing --cov-fail-under=100 tests/
+
+      - name: 3. MC/DC Compound Predicate Independence Gate
+        run: |
+          PYTHONPATH=src:. python scripts/verify_mcdc.py
+
+      - name: 4. AST Requirements Traceability Matrix Audit (RTM)
+        run: |
+          PYTHONPATH=src:. python scripts/generate_rtm.py
+
+      - name: 5. Headless Chrome Browser Integration Test
+        run: |
+          bash scripts/run_tests.sh

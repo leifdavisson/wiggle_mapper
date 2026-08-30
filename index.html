@@ -627,14 +627,18 @@
                         const mac = row['MAC'] || row['BSSID'] || row['mac'] || row['bssid'] || '';
                         const lat = parseFloat(row['CurrentLatitude'] || row['lat'] || row['latitude']);
                         const lng = parseFloat(row['CurrentLongitude'] || row['lon'] || row['lng'] || row['longitude']);
-                        const rssi = parseInt(row['RSSI'] || row['rssi'] || row['signal'] || -100);
-                        const channel = parseInt(row['Channel'] || row['channel'] || 0);
-                        const freq = parseInt(row['Frequency'] || row['frequency'] || 0);
-                        const accuracy = parseFloat(row['AccuracyMeters'] || row['accuracy'] || 10);
-                        const type = row['Type'] || row['type'] || 'WIFI';
+                        let rssi = parseInt(row['RSSI'] || row['rssi'] || row['signal'] || -100);
+                        if (isNaN(rssi)) rssi = -100;
+                        let channel = parseInt(row['Channel'] || row['channel'] || 0);
+                        if (isNaN(channel)) channel = 0;
+                        let freq = parseInt(row['Frequency'] || row['frequency'] || 0);
+                        if (isNaN(freq)) freq = 0;
+                        let accuracy = parseFloat(row['AccuracyMeters'] || row['accuracy'] || 10);
+                        if (isNaN(accuracy)) accuracy = 10.0;
+                        const type = String(row['Type'] || row['type'] || 'WIFI').trim().toUpperCase();
 
-                        // Filter to valid Wi-Fi points with proper coordinates
-                        if (type.toUpperCase() === 'WIFI' && !isNaN(lat) && !isNaN(lng) && mac) {
+                        // Filter to valid Wi-Fi points with proper coordinates and non-empty MAC
+                        if (type === 'WIFI' && !isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng) && String(mac).trim().length > 0) {
                             points.push({
                                 ssid: String(ssid).trim(),
                                 mac: String(mac).trim(),
@@ -769,8 +773,8 @@
                 if (selectedSsid !== '_ALL_' && p.ssid !== selectedSsid) return false;
                 
                 // Filter by Band (approximate frequency values)
-                const is5G = p.frequency >= 4900 && p.frequency <= 5900 || p.channel > 14;
-                const is24G = p.frequency >= 2400 && p.frequency <= 2500 || p.channel <= 14;
+                const is5G = (p.frequency >= 4900 && p.frequency <= 5900) || (p.channel > 14);
+                const is24G = (p.frequency >= 2400 && p.frequency <= 2500) || (p.channel >= 1 && p.channel <= 14);
                 
                 if (is5G && !check5) return false;
                 if (is24G && !check24) return false;
@@ -1128,14 +1132,17 @@
             if (insideCampusTotalCells > 0) {
                 const deadZonePct = Math.round((deadZoneCellsCount / insideCampusTotalCells) * 100);
                 const gapsPct = Math.round((sparseCellsCount / insideCampusTotalCells) * 100);
-                deadZoneStat.textContent = `${deadZonePct}%`;
-                gapStat.textContent = `${gapsPct}%`;
+                const safeDeadZone = isNaN(deadZonePct) ? 0 : deadZonePct;
+                const safeGaps = isNaN(gapsPct) ? 0 : gapsPct;
+                deadZoneStat.textContent = `${safeDeadZone}%`;
+                gapStat.textContent = `${safeGaps}%`;
 
                 // Alert conditions based on stats
-                triggerDashboardAlerts(deadZonePct, gapsPct, points);
+                triggerDashboardAlerts(safeDeadZone, safeGaps, points);
             } else {
                 deadZoneStat.textContent = '0%';
                 gapStat.textContent = '0%';
+                triggerDashboardAlerts(0, 0, points);
             }
         }
 
@@ -1289,22 +1296,32 @@
 
         // Andrew's Monotone Chain Algorithm for Convex Hull
         function convexHull(pts) {
-            pts.sort((a, b) => a.lat === b.lat ? a.lng - b.lng : a.lat - b.lat);
+            if (!pts || pts.length <= 2) return (pts || []).slice();
+            const sorted = pts.slice().sort((a, b) => a.lat === b.lat ? a.lng - b.lng : a.lat - b.lat);
             
+            // Remove duplicate consecutive coordinates
+            const uniquePts = [];
+            for (let i = 0; i < sorted.length; i++) {
+                if (i === 0 || sorted[i].lat !== sorted[i-1].lat || sorted[i].lng !== sorted[i-1].lng) {
+                    uniquePts.push(sorted[i]);
+                }
+            }
+            if (uniquePts.length <= 2) return uniquePts;
+
             const lower = [];
-            for (let i = 0; i < pts.length; i++) {
-                while (lower.length >= 2 && crossProduct(lower[lower.length - 2], lower[lower.length - 1], pts[i]) <= 0) {
+            for (let i = 0; i < uniquePts.length; i++) {
+                while (lower.length >= 2 && crossProduct(lower[lower.length - 2], lower[lower.length - 1], uniquePts[i]) <= 0) {
                     lower.pop();
                 }
-                lower.push(pts[i]);
+                lower.push(uniquePts[i]);
             }
             
             const upper = [];
-            for (let i = pts.length - 1; i >= 0; i--) {
-                while (upper.length >= 2 && crossProduct(upper[upper.length - 2], upper[upper.length - 1], pts[i]) <= 0) {
+            for (let i = uniquePts.length - 1; i >= 0; i--) {
+                while (upper.length >= 2 && crossProduct(upper[upper.length - 2], upper[upper.length - 1], uniquePts[i]) <= 0) {
                     upper.pop();
                 }
-                upper.push(pts[i]);
+                upper.push(uniquePts[i]);
             }
             
             upper.pop();

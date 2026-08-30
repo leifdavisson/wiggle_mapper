@@ -3,8 +3,15 @@ data/
 *.csv
 *.csv.gz
 
-# Ignore local configuration saves
-*.json
+# Ignore test artifacts, caches & coverage
+.coverage
+coverage.json
+.pytest_cache/
+__pycache__/
+*.pyc
+mutants/
+.mutmut-cache/
+.hypothesis/
 
 # OS files
 .DS_Store

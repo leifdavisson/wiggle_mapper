@@ -1,0 +1,65 @@
+[
+  {
+    "id": "REQ-WIG-001",
+    "title": "WiGLE CSV Header Offset & Schema Parsing",
+    "safety_level": "STANDARD",
+    "description": "The parser shall detect metadata headers and parse CSV content extracting SSID, MAC/BSSID, latitude, longitude, RSSI, channel, frequency, and accuracy, discarding non-WIFI or NaN coordinate records.",
+    "acceptance_criteria": "Given raw WiGLE CSV text with pre-header metadata, when parsed, valid WIFI points with numeric coordinates are returned and invalid or non-WIFI rows are excluded."
+  },
+  {
+    "id": "REQ-WIG-002",
+    "title": "SSID Normalization and Frequency Band Filtering",
+    "safety_level": "STANDARD",
+    "description": "The parser shall normalize empty SSIDs, support filtering by exact SSID or all networks, and support filtering by 2.4 GHz and 5 GHz bands.",
+    "acceptance_criteria": "Points are correctly filtered based on target SSID and band selection flags (2.4 GHz and 5 GHz frequency/channel mappings)."
+  },
+  {
+    "id": "REQ-WIG-003",
+    "title": "Geodesic Coordinates to Metric Spatial Transform",
+    "safety_level": "STANDARD",
+    "description": "The spatial module shall compute metric spatial steps and Euclidean/spherical distances using 111,320 meters per degree latitude and 111,320 * cos(avgLat) meters per degree longitude.",
+    "acceptance_criteria": "Lat/lng degree steps match metric conversions accurately across varying latitudes."
+  },
+  {
+    "id": "REQ-WIG-004",
+    "title": "Ray-Casting Polygon Containment Verification",
+    "safety_level": "STANDARD",
+    "description": "The spatial module shall determine whether a coordinate is inside an arbitrary polygon using ray-casting intersection parity.",
+    "acceptance_criteria": "Points strictly inside boundary return True, exterior points return False, and edge/vertex intersections are handled consistently."
+  },
+  {
+    "id": "REQ-WIG-005",
+    "title": "Boundary Auto-Generation via Andrew's Monotone Chain",
+    "safety_level": "STANDARD",
+    "description": "The spatial module shall construct the minimal convex hull enclosing coordinate points in sorted lexicographical order.",
+    "acceptance_criteria": "Given N >= 3 non-collinear coordinates, when convex hull is computed, the minimal outer convex perimeter is returned in counter-clockwise order."
+  },
+  {
+    "id": "REQ-WIG-006",
+    "title": "Resolution-Scaled Grid Cell Partitioning and RSSI Averaging",
+    "safety_level": "STANDARD",
+    "description": "The grid analyzer shall group points into metric grid cells, dynamically scale grid resolution if total boundary cells exceed 40,000, and compute mean RSSI per cell.",
+    "acceptance_criteria": "Cells group correct points, calculate exact mean RSSI, and adjust resolution when boundary cell count exceeds the 40,000 threshold."
+  },
+  {
+    "id": "REQ-WIG-007",
+    "title": "Dead Zone and Low-Confidence Cell Classification",
+    "safety_level": "CRITICAL",
+    "description": "The grid analyzer shall classify cells with mean RSSI <= -76 dBm (or empty cells inside campus boundary) as dead zones, and cells with sample count < confidence threshold as gaps.",
+    "acceptance_criteria": "Dead zone percentage and survey gap percentage match exact cell ratios inside the active campus boundary."
+  },
+  {
+    "id": "REQ-WIG-008",
+    "title": "Automated Threshold Diagnostic Alerts and 2.4 GHz Congestion Detection",
+    "safety_level": "CRITICAL",
+    "description": "The diagnostic engine shall trigger danger alerts for dead zones > 25%, warning alerts for dead zones > 5%, info alerts for gaps > 30%, and congestion alerts for 2.4 GHz channels 1, 6, 11 having > 5 distinct BSSIDs.",
+    "acceptance_criteria": "Alerts trigger deterministically when statistical conditions and channel congestion thresholds are crossed."
+  },
+  {
+    "id": "REQ-WIG-009",
+    "title": "Project Configuration Serialization and Schema Integrity",
+    "safety_level": "STANDARD",
+    "description": "The serialization module shall serialize boundary coordinates, loaded file names, and data points into a valid JSON schema and validate imported payloads against data corruption.",
+    "acceptance_criteria": "Exported project JSON accurately restores all points, boundary vertices, and file lists upon deserialization."
+  }
+]

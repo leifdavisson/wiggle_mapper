@@ -1,0 +1,124 @@
+[
+  {
+    "requirement_id": "REQ-WIG-001",
+    "title": "WiGLE CSV Header Offset & Schema Parsing",
+    "safety_level": "STANDARD",
+    "verifying_tests": [
+      "test_parse_wiggle_csv_standard",
+      "test_parse_wiggle_csv_alternate_headers_and_invalid_rows",
+      "test_parse_wiggle_csv_fallback_offset",
+      "test_parse_wiggle_csv_header_patterns",
+      "test_parse_wiggle_csv_column_aliases_and_defaults",
+      "test_parse_wiggle_csv_corrupted_and_adversarial_rows",
+      "test_csv_parser_fallback_scanner_and_empty_coordinates",
+      "test_csv_parser_nan_and_unmatched_header_offset",
+      "test_csv_parser_invalid_coordinate_type_error",
+      "test_parse_wiggle_csv_fuzzing"
+    ],
+    "status": "VERIFIED"
+  },
+  {
+    "requirement_id": "REQ-WIG-002",
+    "title": "SSID Normalization and Frequency Band Filtering",
+    "safety_level": "STANDARD",
+    "verifying_tests": [
+      "test_filter_data_points_by_ssid_and_band",
+      "test_filter_data_points_frequency_and_channel_boundaries",
+      "test_get_rssi_color_exact_boundaries",
+      "test_rssi_color_mapping_invariant",
+      "test_filter_data_points_property"
+    ],
+    "status": "VERIFIED"
+  },
+  {
+    "requirement_id": "REQ-WIG-003",
+    "title": "Geodesic Coordinates to Metric Spatial Transform",
+    "safety_level": "STANDARD",
+    "verifying_tests": [
+      "test_calculate_degree_steps",
+      "test_calculate_degree_steps_property",
+      "test_calculate_distance_meters",
+      "test_calculate_degree_steps_polar_extremes",
+      "test_calculate_distance_meters_polar_and_axes"
+    ],
+    "status": "VERIFIED"
+  },
+  {
+    "requirement_id": "REQ-WIG-004",
+    "title": "Ray-Casting Polygon Containment Verification",
+    "safety_level": "STANDARD",
+    "verifying_tests": [
+      "test_is_point_in_polygon_rectangle",
+      "test_is_point_in_polygon_triangle",
+      "test_is_point_in_polygon_less_than_3_vertices",
+      "test_is_point_in_polygon_boundary_and_concave"
+    ],
+    "status": "VERIFIED"
+  },
+  {
+    "requirement_id": "REQ-WIG-005",
+    "title": "Boundary Auto-Generation via Andrew's Monotone Chain",
+    "safety_level": "STANDARD",
+    "verifying_tests": [
+      "test_convex_hull_standard",
+      "test_convex_hull_few_points_or_collinear",
+      "test_convex_hull_collinear_edges_and_line",
+      "test_convex_hull_input_ordering_invariance",
+      "test_convex_hull_empty_and_single"
+    ],
+    "status": "VERIFIED"
+  },
+  {
+    "requirement_id": "REQ-WIG-006",
+    "title": "Resolution-Scaled Grid Cell Partitioning and RSSI Averaging",
+    "safety_level": "STANDARD",
+    "verifying_tests": [
+      "test_calculate_grid_overlay_empty",
+      "test_calculate_grid_overlay_no_boundary",
+      "test_calculate_grid_overlay_dynamic_resolution_scaling",
+      "test_grid_analyzer_boundary_outside_all_cells",
+      "test_grid_analyzer_empty_calculation_helpers",
+      "test_grid_analyzer_bounding_box_empty_and_zero_inside_total",
+      "test_grid_aggregation_arithmetic_mean",
+      "test_resolution_scaling_threshold_under_and_over_40k"
+    ],
+    "status": "VERIFIED"
+  },
+  {
+    "requirement_id": "REQ-WIG-007",
+    "title": "Dead Zone and Low-Confidence Cell Classification",
+    "safety_level": "CRITICAL",
+    "verifying_tests": [
+      "test_calculate_grid_overlay_with_boundary_dead_zones_and_gaps",
+      "test_dead_zone_boundary_conditions",
+      "test_confidence_threshold_boundary_conditions"
+    ],
+    "status": "VERIFIED"
+  },
+  {
+    "requirement_id": "REQ-WIG-008",
+    "title": "Automated Threshold Diagnostic Alerts and 2.4 GHz Congestion Detection",
+    "safety_level": "CRITICAL",
+    "verifying_tests": [
+      "test_generate_channel_histogram",
+      "test_generate_diagnostic_alerts_dead_zones_and_gaps",
+      "test_exact_threshold_boundary_dead_zones",
+      "test_exact_threshold_boundary_confidence_gaps",
+      "test_exact_threshold_boundary_channel_congestion",
+      "test_generate_diagnostic_alerts_channel_congestion",
+      "test_generate_channel_histogram_zero_channel"
+    ],
+    "status": "VERIFIED"
+  },
+  {
+    "requirement_id": "REQ-WIG-009",
+    "title": "Project Configuration Serialization and Schema Integrity",
+    "safety_level": "STANDARD",
+    "verifying_tests": [
+      "test_project_config_serialization_roundtrip",
+      "test_project_config_serialization_stability_and_field_fidelity",
+      "test_deserialize_invalid_payload"
+    ],
+    "status": "VERIFIED"
+  }
+]
