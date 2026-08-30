@@ -1,7 +1,7 @@
 import math
 from typing import Dict, List, Optional, Tuple
-from models import DataPoint, GridCell, GridResult, LatLng
-from geo_spatial import calculate_degree_steps, is_point_in_polygon
+from wiggle_mapper.models import DataPoint, GridCell, GridResult, LatLng
+from wiggle_mapper.geo_spatial import calculate_degree_steps, is_point_in_polygon
 
 def _get_bounding_box(coords: List[LatLng]) -> Tuple[float, float, float, float]:
     """Return min_lat, max_lat, min_lng, max_lng for a list of coordinates."""

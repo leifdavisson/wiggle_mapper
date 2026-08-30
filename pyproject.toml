@@ -1,2 +1,63 @@
-[tool.mutmut]
-paths_to_mutate = ["src"]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wiggle-mapper"
+version = "1.0.0"
+description = "Lightweight Wi-Fi coverage mapping, dead zone detection, and frequency interference analysis engine."
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+requires-python = ">=3.9"
+authors = [
+    { name = "Leif Davisson" }
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Intended Audience :: Education",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: System :: Networking :: Monitoring",
+]
+dependencies = []
+
+[project.scripts]
+wiggle-mapper = "wiggle_mapper.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/leifdavisson/wiggle_mapper"
+Documentation = "https://github.com/leifdavisson/wiggle_mapper#readme"
+Repository = "https://github.com/leifdavisson/wiggle_mapper.git"
+"Live Demo" = "https://leifdavisson.github.io/wiggle_mapper/"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wiggle_mapper"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/index.html",
+    "/README.md",
+    "/LICENSE",
+    "/requirements.json",
+    "/docs",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.mypy]
+strict = true
+python_version = "3.10"
+mypy_path = "src"

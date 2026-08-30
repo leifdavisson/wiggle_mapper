@@ -2,8 +2,8 @@ import math
 import pytest
 from hypothesis import given, strategies as st
 from tests.conftest import verifies
-from models import LatLng
-from geo_spatial import (
+from wiggle_mapper.models import LatLng
+from wiggle_mapper.geo_spatial import (
     calculate_degree_steps,
     calculate_distance_meters,
     is_point_in_polygon,

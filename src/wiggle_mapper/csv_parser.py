@@ -3,7 +3,7 @@ import csv
 import io
 import math
 from typing import Any, Dict, List, Optional
-from models import DataPoint
+from wiggle_mapper.models import DataPoint
 
 def find_header_offset(csv_content: str) -> int:
     """Find character offset of CSV header, skipping leading metadata."""

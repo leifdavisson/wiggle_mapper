@@ -16,3 +16,5 @@ mutants/
 # OS files
 .DS_Store
 Thumbs.db
+dist/
+*.egg-info/

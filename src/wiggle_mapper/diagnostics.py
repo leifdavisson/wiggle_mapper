@@ -1,7 +1,7 @@
 # License: GNU AGPLv3 (GNU Affero General Public License v3.0)
 import json
 from typing import Dict, List, Set
-from models import Alert, DataPoint, LatLng, ProjectConfig
+from wiggle_mapper.models import Alert, DataPoint, LatLng, ProjectConfig
 
 def generate_channel_histogram(points: List[DataPoint]) -> Dict[int, int]:
     """Generate map of channel to distinct BSSID / MAC count."""

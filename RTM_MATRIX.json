@@ -13,7 +13,8 @@
       "test_csv_parser_fallback_scanner_and_empty_coordinates",
       "test_csv_parser_nan_and_unmatched_header_offset",
       "test_csv_parser_invalid_coordinate_type_error",
-      "test_parse_wiggle_csv_fuzzing"
+      "test_parse_wiggle_csv_fuzzing",
+      "test_cli_parse_command"
     ],
     "status": "VERIFIED"
   },
@@ -106,7 +107,8 @@
       "test_exact_threshold_boundary_confidence_gaps",
       "test_exact_threshold_boundary_channel_congestion",
       "test_generate_diagnostic_alerts_channel_congestion",
-      "test_generate_channel_histogram_zero_channel"
+      "test_generate_channel_histogram_zero_channel",
+      "test_cli_analyze_command"
     ],
     "status": "VERIFIED"
   },
@@ -117,7 +119,8 @@
     "verifying_tests": [
       "test_project_config_serialization_roundtrip",
       "test_project_config_serialization_stability_and_field_fidelity",
-      "test_deserialize_invalid_payload"
+      "test_deserialize_invalid_payload",
+      "test_cli_help_and_version"
     ],
     "status": "VERIFIED"
   }

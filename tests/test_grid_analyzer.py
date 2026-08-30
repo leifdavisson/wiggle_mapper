@@ -1,7 +1,7 @@
 import pytest
 from tests.conftest import verifies
-from models import DataPoint, LatLng
-from grid_analyzer import calculate_grid_overlay
+from wiggle_mapper.models import DataPoint, LatLng
+from wiggle_mapper.grid_analyzer import calculate_grid_overlay
 
 @verifies("REQ-WIG-006")
 def test_calculate_grid_overlay_empty():
@@ -76,7 +76,7 @@ def test_grid_analyzer_boundary_outside_all_cells():
 
 @verifies("REQ-WIG-006")
 def test_grid_analyzer_empty_calculation_helpers():
-    from grid_analyzer import _calculate_without_boundary, _calculate_with_boundary
+    from wiggle_mapper.grid_analyzer import _calculate_without_boundary, _calculate_with_boundary
     res_no_b = _calculate_without_boundary({}, conf_threshold=3, res_adjusted=False, effective_meters=10)
     assert res_no_b.total_cells == 0
 
@@ -85,7 +85,7 @@ def test_grid_analyzer_empty_calculation_helpers():
 
 @verifies("REQ-WIG-006")
 def test_grid_analyzer_bounding_box_empty_and_zero_inside_total():
-    from grid_analyzer import _get_bounding_box, _calculate_with_boundary
+    from wiggle_mapper.grid_analyzer import _get_bounding_box, _calculate_with_boundary
     assert _get_bounding_box([]) == (0.0, 0.0, 0.0, 0.0)
 
     # Polygon outside calculation range
@@ -110,7 +110,7 @@ def test_grid_aggregation_arithmetic_mean():
 @verifies("REQ-WIG-006")
 def test_resolution_scaling_threshold_under_and_over_40k():
     """Verify resolution scaling stays False when under 40k cells and scales when >40k."""
-    from grid_analyzer import _scale_resolution_if_needed
+    from wiggle_mapper.grid_analyzer import _scale_resolution_if_needed
     # Small boundary ~100m x 100m with 10m grid -> ~100 cells <= 40000
     small_b = [
         LatLng(37.420, -122.080),

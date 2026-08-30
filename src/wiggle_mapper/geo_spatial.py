@@ -1,7 +1,7 @@
 # License: GNU AGPLv3 (GNU Affero General Public License v3.0)
 import math
 from typing import List, Tuple
-from models import LatLng
+from wiggle_mapper.models import LatLng
 
 def calculate_degree_steps(grid_meters: float, avg_lat: float) -> Tuple[float, float]:
     """Calculate latitude and longitude degree offsets for a given meter grid spacing."""

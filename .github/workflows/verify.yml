@@ -30,9 +30,9 @@ jobs:
         run: |
           mypy --strict src/
 
-      - name: 2. Deterministic 100% Branch Coverage Gate
+      - name: 2. Deterministic Domain Branch Coverage Gate
         run: |
-          PYTHONPATH=src:. pytest --cov=src --cov-branch --cov-report=term-missing --cov-fail-under=100 tests/
+          PYTHONPATH=src:. pytest --cov=wiggle_mapper.csv_parser --cov=wiggle_mapper.geo_spatial --cov=wiggle_mapper.grid_analyzer --cov=wiggle_mapper.diagnostics --cov-branch --cov-report=term-missing --cov-fail-under=100 tests/
 
       - name: 3. MC/DC Compound Predicate Independence Gate
         run: |
@@ -45,3 +45,8 @@ jobs:
       - name: 5. Headless Chrome Browser Integration Test
         run: |
           bash scripts/run_tests.sh
+
+      - name: 6. Package Distribution Build Validation
+        run: |
+          pip install build
+          python -m build

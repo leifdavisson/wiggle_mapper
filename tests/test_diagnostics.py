@@ -1,7 +1,7 @@
 import pytest
 from tests.conftest import verifies
-from models import DataPoint, LatLng, ProjectConfig
-from diagnostics import (
+from wiggle_mapper.models import DataPoint, LatLng, ProjectConfig
+from wiggle_mapper.diagnostics import (
     generate_channel_histogram,
     generate_diagnostic_alerts,
     serialize_project_config,

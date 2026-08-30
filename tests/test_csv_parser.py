@@ -2,8 +2,8 @@ import math
 import pytest
 from hypothesis import given, strategies as st
 from tests.conftest import verifies
-from models import DataPoint
-from csv_parser import (
+from wiggle_mapper.models import DataPoint
+from wiggle_mapper.csv_parser import (
     parse_wiggle_csv,
     filter_data_points,
     get_rssi_color,

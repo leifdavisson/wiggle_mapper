@@ -3,10 +3,10 @@
 """MC/DC Verification Script for Wiggle Mapper Domain Predicates."""
 import sys
 from typing import Dict, List, Tuple
-from models import DataPoint, LatLng
-from csv_parser import filter_data_points
-from geo_spatial import is_point_in_polygon
-from diagnostics import generate_diagnostic_alerts
+from wiggle_mapper.models import DataPoint, LatLng
+from wiggle_mapper.csv_parser import filter_data_points
+from wiggle_mapper.geo_spatial import is_point_in_polygon
+from wiggle_mapper.diagnostics import generate_diagnostic_alerts
 
 def verify_filter_predicate_mcdc() -> bool:
     """Verify MC/DC for Predicate: (is_5g and allow_5g) or (is_24g and allow_24g)
